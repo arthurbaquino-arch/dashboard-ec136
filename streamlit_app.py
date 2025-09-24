@@ -47,6 +47,9 @@ def load_data(uploaded_file):
         unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
         df = df.drop(columns=unnamed_cols, errors='ignore')
 
+        # Remover linhas que estejam completamente vazias
+        df = df.dropna(how='all')
+
         # Garantir que a quantidade de colunas está correta antes de renomear
         if df.shape[1] != 13:
             raise ValueError(f"O arquivo tem {df.shape[1]} colunas, mas o esperado é 13. Por favor, verifique a estrutura.")
@@ -118,39 +121,6 @@ if uploaded_file:
         col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
         col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
-        st.markdown("---")
-
-        # Gráficos
-        st.header("Análise Visual dos Dados")
-        col_graph1, col_graph2 = st.columns(2)
-
-        with col_graph1:
-            st.subheader("Top 10 Endividamento por Ente")
-            top_10 = filtered_df.groupby('ENTE')['ENDIVIDAMENTO_TOTAL'].sum().nlargest(10).reset_index()
-            fig_bar = px.bar(
-                top_10,
-                x='ENDIVIDAMENTO_TOTAL',
-                y='ENTE',
-                title='Top 10 Endividamentos Totais',
-                orientation='h',
-                labels={'ENTE': 'Ente', 'ENDIVIDAMENTO_TOTAL': 'Endividamento Total'},
-                color_discrete_sequence=px.colors.qualitative.Pastel
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-
-        with col_graph2:
-            st.subheader("Distribuição por Situação")
-            situacao_counts = filtered_df['SITUACAO_DIVIDA'].value_counts().reset_index()
-            situacao_counts.columns = ['Situacao', 'Contagem']
-            fig_pie = px.pie(
-                situacao_counts,
-                values='Contagem',
-                names='Situacao',
-                title='Distribuição da Situação da Dívida',
-                color_discrete_sequence=px.colors.qualitative.Vivid
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
-        
         st.markdown("---")
 
         # Tabela de dados
