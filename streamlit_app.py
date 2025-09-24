@@ -17,13 +17,16 @@ def load_data(uploaded_file):
         # Tenta ler com ';' primeiro, depois com ',' para CSV
         if uploaded_file.name.endswith('.csv'):
             try:
-                df = pd.read_csv(uploaded_file, skiprows=9, decimal=',', sep=';', skipfooter=1, engine='python')
+                df = pd.read_csv(uploaded_file, decimal=',', sep=';')
             except Exception:
                 uploaded_file.seek(0)
-                df = pd.read_csv(uploaded_file, skiprows=9, decimal=',', skipfooter=1, engine='python')
+                df = pd.read_csv(uploaded_file, decimal=',')
         else:
-            # Para arquivos .xlsx, pula as 9 primeiras linhas e a última
-            df = pd.read_excel(uploaded_file, skiprows=9, skipfooter=1, engine='python')
+            # Para arquivos .xlsx
+            df = pd.read_excel(uploaded_file, header=None)
+            
+        # Pular as 9 primeiras linhas e a última, que é o total
+        df = df.iloc[9:-1].copy()
             
         # Remove a primeira coluna, que parece estar vazia no arquivo
         df = df.iloc[:, 1:]
