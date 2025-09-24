@@ -77,12 +77,14 @@ if df is not None:
     # Filtros na barra lateral (apenas ENTE)
     st.sidebar.header("Filtros")
     ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
-    selected_entes = st.sidebar.multiselect('Selecione o(s) Ente(s)', options=ente_options, default=ente_options[0])
+    
+    # TROCA DE MULTISELECT PARA SELECTBOX PARA PERMITIR APENAS 1 OPÇÃO
+    selected_ente = st.sidebar.selectbox('Selecione o Ente', options=ente_options)
 
     # Aplicar filtros
     filtered_df = df.copy()
-    if 'Todos' not in selected_entes:
-        filtered_df = filtered_df[filtered_df['ENTE'].isin(selected_entes)]
+    if selected_ente != 'Todos':
+        filtered_df = filtered_df[filtered_df['ENTE'] == selected_ente]
 
     # Colunas de métricas
     st.header("Principais Indicadores")
