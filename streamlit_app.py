@@ -5,7 +5,7 @@ import unicodedata
 import base64
 
 # Nome do arquivo de dados e da imagem no repositório
-DATA_FILE = "PAINEL EC 136-2025.xlsx - PLANILHA PEC 136.csv"
+DATA_FILE = "PAINEL EC 136-2025.xlsx"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Função para carregar a imagem e convertê-la para Base64
@@ -71,13 +71,16 @@ if st.button('Recarregar Dados'):
 @st.cache_data
 def load_data():
     try:
-        # Lê o arquivo CSV, ignorando as linhas extras e usando o cabeçalho correto
-        df = pd.read_csv(DATA_FILE, sep=',', header=8)
+        # Carrega o arquivo XLSX conforme o nome e formato corretos
+        df = pd.read_excel(DATA_FILE, header=None)
             
-        # Pular a última linha, que é o total, e remover a primeira coluna
-        df = df.iloc[:-1, 1:].copy()
+        # Pular as 9 primeiras linhas e a última, que é o total
+        df = df.iloc[9:-1].copy()
             
-        # Remover colunas sem nome (geradas por erro de formatação)
+        # Remove a primeira coluna, que parece estar vazia no arquivo
+        df = df.iloc[:, 1:]
+
+        # Identificar e remover colunas sem nome (geradas por erro de formatação)
         unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
         df = df.drop(columns=unnamed_cols, errors='ignore')
 
@@ -150,7 +153,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
     col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
     col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
     col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    col4.metric("Saldo a Pagar", f"R$ {saldo_a_agar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
     st.markdown("---")
 
