@@ -28,7 +28,7 @@ def add_bg_from_local(image_file):
         background-attachment: fixed;
     }
     .st-emotion-cache-183q192 {
-        padding-top: 100px; /* Ajusta o padding para o título ficar abaixo do brasão */
+        padding-top: 100px;
     }
     h1, h2, h3, h4, h5, h6 {
         margin-top: 0;
