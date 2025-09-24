@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# Nome do arquivo de dados no repositório
+DATA_FILE = "PAINEL EC 136-2025.xlsx"
+
 # Configuração da página
 st.set_page_config(
     page_title="Painel EC 136/2025",
@@ -12,18 +15,9 @@ st.set_page_config(
 
 # Função para carregar os dados
 @st.cache_data
-def load_data(uploaded_file):
+def load_data():
     try:
-        # Tenta ler com ';' primeiro, depois com ',' para CSV
-        if uploaded_file.name.endswith('.csv'):
-            try:
-                df = pd.read_csv(uploaded_file, decimal=',', sep=';')
-            except Exception:
-                uploaded_file.seek(0)
-                df = pd.read_csv(uploaded_file, decimal=',')
-        else:
-            # Para arquivos .xlsx
-            df = pd.read_excel(uploaded_file, header=None)
+        df = pd.read_excel(DATA_FILE, header=None)
             
         # Pular as 9 primeiras linhas e a última, que é o total
         df = df.iloc[9:-1].copy()
@@ -77,84 +71,78 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
 Use o filtro na barra lateral para explorar os dados de forma interativa.
 """)
 
-# Upload de arquivo na barra lateral
-st.sidebar.header("Passo 1: Envie a Planilha")
-uploaded_file = st.sidebar.file_uploader("Selecione o arquivo .csv ou .xlsx", type=["csv", "xlsx"])
+# Carrega os dados diretamente do repositório
+df = load_data()
+if df is not None:
+    # Filtros na barra lateral (apenas ENTE)
+    st.sidebar.header("Filtros")
+    ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
+    selected_entes = st.sidebar.multiselect('Selecione o(s) Ente(s)', options=ente_options, default=ente_options[0])
 
-if uploaded_file:
-    df = load_data(uploaded_file)
-    if df is not None:
-        # Filtros na barra lateral (apenas ENTE)
-        st.sidebar.header("Passo 2: Filtros")
-        ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
-        selected_entes = st.sidebar.multiselect('Selecione o(s) Ente(s)', options=ente_options, default=ente_options[0])
+    # Aplicar filtros
+    filtered_df = df.copy()
+    if 'Todos' not in selected_entes:
+        filtered_df = filtered_df[filtered_df['ENTE'].isin(selected_entes)]
 
-        # Aplicar filtros
-        filtered_df = df.copy()
-        if 'Todos' not in selected_entes:
-            filtered_df = filtered_df[filtered_df['ENTE'].isin(selected_entes)]
+    # Colunas de métricas
+    st.header("Principais Indicadores")
+    col1, col2, col3, col4 = st.columns(4)
 
-        # Colunas de métricas
-        st.header("Principais Indicadores")
-        col1, col2, col3, col4 = st.columns(4)
+    # Métricas
+    total_divida = filtered_df['ENDIVIDAMENTO_TOTAL'].sum()
+    total_precatorios = filtered_df['QTD_DE_PRECATORIOS'].sum()
+    parcela_anual = filtered_df['PARCELA_ANUAL'].sum()
+    saldo_a_pagar = filtered_df['SALDO_A_PAGAR'].sum()
 
-        # Métricas
-        total_divida = filtered_df['ENDIVIDAMENTO_TOTAL'].sum()
-        total_precatorios = filtered_df['QTD_DE_PRECATORIOS'].sum()
-        parcela_anual = filtered_df['PARCELA_ANUAL'].sum()
-        saldo_a_pagar = filtered_df['SALDO_A_PAGAR'].sum()
+    col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
+    col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
-        col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-        col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
-        col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-        col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    st.markdown("---")
 
-        st.markdown("---")
+    # Gráfico de pizza de divisão da dívida
+    st.header("Divisão da Dívida")
+    divida_data = {
+        'Tipo': ['Estoque em Mora', 'Estoque Vincendos'],
+        'Valor': [filtered_df['ESTOQUE_EM_MORA'].sum(), filtered_df['ESTOQUE_VINCENDOS'].sum()]
+    }
+    divida_df = pd.DataFrame(divida_data)
+    
+    fig_divida_pie = px.pie(
+        divida_df,
+        values='Valor',
+        names='Tipo',
+        title='Divisão da Dívida entre Estoque em Mora e Vincendos',
+        color_discrete_sequence=px.colors.qualitative.Pastel
+    )
+    st.plotly_chart(fig_divida_pie, use_container_width=True)
 
-        # Gráfico de pizza de divisão da dívida
-        st.header("Divisão da Dívida")
-        divida_data = {
-            'Tipo': ['Estoque em Mora', 'Estoque Vincendos'],
-            'Valor': [filtered_df['ESTOQUE_EM_MORA'].sum(), filtered_df['ESTOQUE_VINCENDOS'].sum()]
+    st.markdown("---")
+    
+    # Tabela de dados
+    st.header("Tabela de Dados Detalhada")
+    st.dataframe(filtered_df.style.format(
+        {
+            "ENDIVIDAMENTO_TOTAL": "R$ {:,.2f}",
+            "SALDO_A_PAGAR": "R$ {:,.2f}",
+            "ESTOQUE_EM_MORA": "R$ {:,.2f}",
+            "ESTOQUE_VINCENDOS": "R$ {:,.2f}",
+            "RCL_2024": "R$ {:,.2f}",
+            "PARCELA_ANUAL": "R$ {:,.2f}",
+            "APORTES": "R$ {:,.2f}",
+            "ESTORNO": "R$ {:,.2f}",
+            "DIVIDA_EM_MORA_RCL": "{:.2%}",
+            "APLICADO": "{:.2%}",
+            "QTD_DE_PRECATORIOS": "{:,.0f}"
         }
-        divida_df = pd.DataFrame(divida_data)
-        
-        fig_divida_pie = px.pie(
-            divida_df,
-            values='Valor',
-            names='Tipo',
-            title='Divisão da Dívida entre Estoque em Mora e Vincendos',
-            color_discrete_sequence=px.colors.qualitative.Pastel
-        )
-        st.plotly_chart(fig_divida_pie, use_container_width=True)
+    ).hide(axis="index"), use_container_width=True)
 
-        st.markdown("---")
-        
-        # Tabela de dados
-        st.header("Tabela de Dados Detalhada")
-        st.dataframe(filtered_df.style.format(
-            {
-                "ENDIVIDAMENTO_TOTAL": "R$ {:,.2f}",
-                "SALDO_A_PAGAR": "R$ {:,.2f}",
-                "ESTOQUE_EM_MORA": "R$ {:,.2f}",
-                "ESTOQUE_VINCENDOS": "R$ {:,.2f}",
-                "RCL_2024": "R$ {:,.2f}",
-                "PARCELA_ANUAL": "R$ {:,.2f}",
-                "APORTES": "R$ {:,.2f}",
-                "ESTORNO": "R$ {:,.2f}",
-                "DIVIDA_EM_MORA_RCL": "{:.2%}",
-                "APLICADO": "{:.2%}",
-                "QTD_DE_PRECATORIOS": "{:,.0f}"
-            }
-        ).hide(axis="index"), use_container_width=True)
-
-        # Botão para download
-        csv_data = filtered_df.to_csv(index=False)
-        st.download_button(
-            label="Download dos Dados Filtrados em CSV",
-            data=csv_data,
-            file_name='dados_filtrados.csv',
-            mime='text/csv',
-        )
-else:
-    st.info("Por favor, faça o upload da sua planilha para começar.")
+    # Botão para download
+    csv_data = filtered_df.to_csv(index=False)
+    st.download_button(
+        label="Download dos Dados Filtrados em CSV",
+        data=csv_data,
+        file_name='dados_filtrados.csv',
+        mime='text/csv',
+    )
