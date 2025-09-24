@@ -5,7 +5,7 @@ import unicodedata
 import base64
 
 # Nome do arquivo de dados e da imagem no repositório
-DATA_FILE = "PAINEL EC 136-2025.xlsx - PLANILHA PEC 136.csv"
+DATA_FILE = "PAINEL EC 136-2025.xlsx - Planilha1.csv"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Função para carregar a imagem e convertê-la para Base64
@@ -66,13 +66,15 @@ if st.button('Recarregar Dados'):
 @st.cache_data
 def load_data():
     try:
-        # Lê o arquivo CSV, ignorando as linhas extras e usando o cabeçalho correto
-        df = pd.read_csv(DATA_FILE, sep=',', header=8)
+        df = pd.read_csv(DATA_FILE, sep=',', header=None)
             
-        # Pular a última linha, que é o total, e remover a primeira coluna
-        df = df.iloc[:-1, 1:].copy()
+        # Pular as 9 primeiras linhas e a última, que é o total
+        df = df.iloc[9:-1].copy()
             
-        # Remover colunas sem nome (geradas por erro de formatação)
+        # Remove a primeira coluna, que parece estar vazia no arquivo
+        df = df.iloc[:, 1:]
+
+        # Identificar e remover colunas sem nome (geradas por erro de formatação)
         unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
         df = df.drop(columns=unnamed_cols, errors='ignore')
 
@@ -81,8 +83,7 @@ def load_data():
 
         # Garantir que a quantidade de colunas está correta antes de renomear
         if df.shape[1] != 13:
-            st.error(f"O arquivo tem {df.shape[1]} colunas, mas o esperado é 13. Por favor, verifique a estrutura.")
-            st.stop()
+            raise ValueError(f"O arquivo tem {df.shape[1]} colunas, mas o esperado é 13. Por favor, verifique a estrutura.")
         
         # Renomear colunas para facilitar o acesso
         df.columns = [
@@ -92,8 +93,10 @@ def load_data():
             'SITUACAO DIVIDA'
         ]
 
-        # Substituir valores '-' por NaN e converter para numérico
+        # Substituir valores '-' por NaN
         df = df.replace('-', pd.NA)
+
+        # Converter colunas numéricas
         numeric_cols = [
             'ESTOQUE - EM MORA', 'ESTOQUE - VINCENDOS', 'ENDIVIDAMENTO TOTAL', 
             'QTD DE PRECATORIOS', 'RCL 2024', 'DIVIDA EM MORA / RCL', 
