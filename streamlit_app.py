@@ -68,18 +68,15 @@ def load_data():
 st.title('📊 Painel de Análise - EC 136/2025')
 st.markdown("""
 Este dashboard foi gerado automaticamente para visualizar e analisar os dados da planilha de situação dos entes devedores.
-Use o filtro na barra lateral para explorar os dados de forma interativa.
 """)
 
 # Carrega os dados diretamente do repositório
 df = load_data()
 if df is not None:
-    # Filtros na barra lateral (apenas ENTE)
-    st.sidebar.header("Filtros")
+    # Filtro no painel principal
+    st.header("Filtros")
     ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
-    
-    # TROCA DE MULTISELECT PARA SELECTBOX PARA PERMITIR APENAS 1 OPÇÃO
-    selected_ente = st.sidebar.selectbox('Selecione o Ente', options=ente_options)
+    selected_ente = st.selectbox('Selecione o Ente', options=ente_options)
 
     # Aplicar filtros
     filtered_df = df.copy()
@@ -148,3 +145,5 @@ if df is not None:
         file_name='dados_filtrados.csv',
         mime='text/csv',
     )
+else:
+    st.info("Por favor, faça o upload da sua planilha para começar.")
