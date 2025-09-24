@@ -10,41 +10,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Função para carregar os dados
-@st.cache_data
-def load_data(uploaded_file):
-    
-    df = pd.read_csv(uploaded_file, skiprows=5, decimal=',')
-    
-    # Remover a primeira coluna extra que não tem nome
-    df = df.iloc[:, 1:]
-
-    # Limpeza e tratamento de dados
-    # Remover colunas vazias
-    df = df.dropna(axis=1, how='all')
-
-    # Renomear colunas para facilitar o acesso
-    df.columns = [
-        'ENTE', 'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-        'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-        'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR',
-        'SITUACAO_DIVIDA'
-    ]
-
-    # Substituir valores '-' por NaN
-    df = df.replace('-', pd.NA)
-
-    # Converter colunas numéricas
-    numeric_cols = [
-        'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-        'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-        'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
-    ]
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
-
-    return df
-
 # Layout da aplicação
 st.title('📊 Painel de Análise - EC 136/2025')
 st.markdown("""
@@ -59,23 +24,40 @@ uploaded_file = st.sidebar.file_uploader("Selecione o arquivo .csv ou .xlsx", ty
 if uploaded_file:
     try:
         if uploaded_file.name.endswith('.csv'):
-            df = load_data(uploaded_file)
+            df = pd.read_csv(uploaded_file, skiprows=5, decimal=',')
         else:
             # Para arquivos .xlsx, ler a primeira aba
             df = pd.read_excel(uploaded_file, skiprows=5)
-            df.columns = [
-                'ENTE', 'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-                'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-                'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR',
-                'SITUACAO_DIVIDA'
-            ]
-            numeric_cols = [
-                'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-                'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-                'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
-            ]
-            for col in numeric_cols:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # Identificar e remover colunas sem nome (geradas por erro de formatação)
+        unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
+        df = df.drop(columns=unnamed_cols, errors='ignore')
+        
+        # Garantir que a quantidade de colunas está correta antes de renomear
+        if df.shape[1] != 13:
+            st.error(f"Houve um erro: O arquivo tem {df.shape[1]} colunas, mas o esperado é 13.")
+            st.info("Por favor, verifique se a sua planilha não tem colunas extras entre os dados.")
+            st.stop()
+
+        # Renomear colunas para facilitar o acesso
+        df.columns = [
+            'ENTE', 'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
+            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
+            'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR',
+            'SITUACAO_DIVIDA'
+        ]
+
+        # Substituir valores '-' por NaN
+        df = df.replace('-', pd.NA)
+
+        # Converter colunas numéricas
+        numeric_cols = [
+            'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
+            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
+            'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
+        ]
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
 
     except Exception as e:
         st.error(f"Houve um erro ao processar o arquivo: {e}")
