@@ -13,8 +13,12 @@ st.set_page_config(
 # Função para carregar os dados
 @st.cache_data
 def load_data(uploaded_file):
+    
     df = pd.read_csv(uploaded_file, skiprows=5, decimal=',')
     
+    # Remover a primeira coluna extra que não tem nome
+    df = df.iloc[:, 1:]
+
     # Limpeza e tratamento de dados
     # Remover colunas vazias
     df = df.dropna(axis=1, how='all')
