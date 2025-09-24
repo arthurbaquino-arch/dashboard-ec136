@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import unicodedata
 
 # Nome do arquivo de dados no repositório
 DATA_FILE = "PAINEL EC 136-2025.xlsx"
@@ -75,7 +76,12 @@ df = load_data()
 if df is not None:
     # Filtro no painel principal
     st.header("Filtros")
-    ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
+    
+    # Lógica de ordenação com tratamento de acentos
+    ente_list = df['ENTE'].dropna().unique()
+    sorted_entes = sorted(ente_list, key=lambda s: unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode('utf-8'))
+    ente_options = ['Todos'] + sorted_entes
+    
     selected_ente = st.selectbox('Selecione o Ente', options=ente_options)
 
     # Aplicar filtros
