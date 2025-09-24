@@ -7,6 +7,21 @@ import unicodedata
 DATA_FILE = "PAINEL EC 136-2025.xlsx"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
+# Adicionar CSS para o fundo cinza claro e estilo formal
+st.markdown(
+    """
+    <style>
+    .reportview-container {
+        background: #F0F2F6;
+    }
+    .main {
+        background-color: #F0F2F6;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Configuração da página
 st.set_page_config(
     page_title="Painel EC 136/2025",
