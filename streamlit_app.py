@@ -11,11 +11,20 @@ BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 st.markdown(
     """
     <style>
-    .reportview-container {
-        background: #F0F2F6;
-    }
     .main {
-        background-color: #F0F2F6;
+        background-color: #f0f2f6;
+    }
+    .st-emotion-cache-183q192 {
+        gap: 0px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    .css-1r1c-1r1c-1r1c a {
+        color: #f0f2f6 !important;
     }
     </style>
     """,
@@ -35,8 +44,8 @@ col_img, col_title = st.columns([1, 4])
 with col_img:
     st.image(BRASAO_IMAGE, width=150)
 with col_title:
-    st.title("TRIBUNAL DE JUSTIÇA DE PERNAMBUCO")
-    st.subheader("COORDENADORIA GERAL DE PRECATÓRIOS")
+    st.markdown("<h1><font size='+4'>TRIBUNAL DE JUSTIÇA DE PERNAMBUCO</font></h1>", unsafe_allow_html=True)
+    st.markdown("<h2><font size='+2'>COORDENADORIA GERAL DE PRECATÓRIOS</font></h2>", unsafe_allow_html=True)
 
 st.markdown("---")
 
