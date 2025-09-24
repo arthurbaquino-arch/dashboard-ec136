@@ -57,13 +57,13 @@ st.set_page_config(
 add_bg_from_local(BRASAO_IMAGE)
 
 # Adicionar título e subtítulo
-st.title("TRIBUNAL DE JUSTIÇA DE PERNAMBUCO")
+st.title("TRIBUNAL DE JUSTIÇA DE PERNAMBUCO ⚖️")
 st.subheader("COORDENADORIA GERAL DE PRECATÓRIOS")
 
 st.markdown("---")
 
 # Botão para recarregar o cache
-if st.button('Recarregar Dados'):
+if st.button('Recarregar Dados 🔄'):
     st.cache_data.clear()
     st.rerun()
 
@@ -126,7 +126,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
 """)
 
     # Filtro no painel principal
-    st.header("Filtros")
+    st.header("Filtros 🔎")
     
     # Lógica de ordenação com tratamento de acentos
     ente_list = df['ENTE'].dropna().unique()
@@ -141,7 +141,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
         filtered_df = filtered_df[filtered_df['ENTE'] == selected_ente]
 
     # Colunas de métricas
-    st.header("Principais Indicadores")
+    st.header("Principais Indicadores 📊")
     col1, col2, col3, col4 = st.columns(4)
 
     # Métricas
@@ -150,15 +150,15 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
     parcela_anual = filtered_df['PARCELA ANUAL'].sum()
     saldo_a_pagar = filtered_df['SALDO A PAGAR'].sum()
 
-    col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
-    col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col1.metric("Endividamento Total 💰", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col2.metric("Qtd. de Precatórios 📜", f"{total_precatorios:,.0f}".replace(",", "."))
+    col3.metric("Parcela Anual 🗓️", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col4.metric("Saldo a Pagar 💸", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
     st.markdown("---")
 
     # Gráfico de pizza de divisão da dívida
-    st.header("Divisão da Dívida")
+    st.header("Divisão da Dívida 📈")
     divida_data = {
         'Tipo': ['Estoque - Em Mora', 'Estoque - Vincendos'],
         'Valor': [filtered_df['ESTOQUE - EM MORA'].sum(), filtered_df['ESTOQUE - VINCENDOS'].sum()]
@@ -177,7 +177,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
     st.markdown("---")
     
     # Tabela de dados
-    st.header("Dados Gerais")
+    st.header("Dados Gerais 📋")
     st.dataframe(filtered_df.style.set_table_styles([
         {'selector': 'th', 'props': [('font-weight', 'bold'), ('text-align', 'center')]}
     ]).format(
@@ -199,7 +199,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
     # Botão para download
     csv_data = filtered_df.to_csv(index=False)
     st.download_button(
-        label="Download dos Dados Filtrados em CSV",
+        label="Download dos Dados Filtrados em CSV 📥",
         data=csv_data,
         file_name='dados_filtrados.csv',
         mime='text/csv',
