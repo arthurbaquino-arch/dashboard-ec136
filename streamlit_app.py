@@ -2,20 +2,33 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import unicodedata
+import base64
 
 # Nome do arquivo de dados e da imagem no repositório
 DATA_FILE = "PAINEL EC 136-2025.xlsx"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
-# Adicionar CSS para o fundo cinza claro e estilo formal
-st.markdown(
-    """
+# Função para carregar a imagem e convertê-la para Base64
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode('utf-8')
+
+# Adicionar CSS para o fundo cinza claro e o brasão como plano de fundo
+def add_bg_from_local(image_file):
+    bin_str = get_base64_of_bin_file(image_file)
+    page_bg_img = '''
     <style>
     .main {
         background-color: #f0f2f6;
+        background-image: url("data:image/png;base64,%s");
+        background-repeat: no-repeat;
+        background-size: 200px;
+        background-position: left top;
+        background-attachment: fixed;
     }
     .st-emotion-cache-183q192 {
-        gap: 0px;
+        padding-top: 100px; /* Ajusta o padding para o título ficar abaixo do brasão */
     }
     h1, h2, h3, h4, h5, h6 {
         margin-top: 0;
@@ -23,13 +36,9 @@ st.markdown(
         padding-top: 0;
         padding-bottom: 0;
     }
-    .css-1r1c-1r1c-1r1c a {
-        color: #f0f2f6 !important;
-    }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    ''' % bin_str
+    st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # Configuração da página
 st.set_page_config(
@@ -39,13 +48,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Adicionar o brasão, título e subtítulo
-col_img, col_title = st.columns([1, 4])
-with col_img:
-    st.image(BRASAO_IMAGE, width=150)
-with col_title:
-    st.markdown("<h1><font size='+4'>TRIBUNAL DE JUSTIÇA DE PERNAMBUCO</font></h1>", unsafe_allow_html=True)
-    st.markdown("<h2><font size='+2'>COORDENADORIA GERAL DE PRECATÓRIOS</font></h2>", unsafe_allow_html=True)
+# Adicionar o plano de fundo com o brasão
+add_bg_from_local(BRASAO_IMAGE)
+
+# Adicionar título e subtítulo
+st.title("TRIBUNAL DE JUSTIÇA DE PERNAMBUCO")
+st.subheader("COORDENADORIA GERAL DE PRECATÓRIOS")
 
 st.markdown("---")
 
