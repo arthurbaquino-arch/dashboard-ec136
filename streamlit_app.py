@@ -24,7 +24,8 @@ uploaded_file = st.sidebar.file_uploader("Selecione o arquivo .csv ou .xlsx", ty
 if uploaded_file:
     try:
         if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file, skiprows=5, decimal=',')
+            # CORREÇÃO: Adicionado o parâmetro 'sep' para o ponto e vírgula
+            df = pd.read_csv(uploaded_file, skiprows=5, decimal=',', sep=';')
         else:
             # Para arquivos .xlsx, ler a primeira aba
             df = pd.read_excel(uploaded_file, skiprows=5)
