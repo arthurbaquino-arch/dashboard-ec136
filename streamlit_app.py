@@ -5,7 +5,7 @@ import unicodedata
 import base64
 
 # Nome do arquivo de dados e da imagem no repositório
-DATA_FILE = "PAINEL EC 136-2025.xlsx - PLANILHA PEC 136.csv"
+DATA_FILE = "PAINEL EC 136-2025.xlsx"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Função para carregar a imagem e convertê-la para Base64
@@ -71,13 +71,16 @@ if st.button('Recarregar Dados'):
 @st.cache_data
 def load_data():
     try:
-        # Lê o arquivo CSV, ignorando as linhas extras e usando o cabeçalho correto
-        df = pd.read_csv(DATA_FILE, sep=',', header=8)
+        # Carrega o arquivo XLSX e pula as 9 primeiras linhas
+        df = pd.read_excel(DATA_FILE, header=None)
             
-        # Pular a primeira coluna
-        df = df.iloc[:, 1:].copy()
+        # Pula as 9 primeiras linhas e não remove a última
+        df = df.iloc[9:].copy()
             
-        # Remover colunas sem nome (geradas por erro de formatação)
+        # Remove a primeira coluna, que parece estar vazia no arquivo
+        df = df.iloc[:, 1:]
+
+        # Identificar e remover colunas sem nome (geradas por erro de formatação)
         unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
         df = df.drop(columns=unnamed_cols, errors='ignore')
 
@@ -181,23 +184,4 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
         {
             "ENDIVIDAMENTO TOTAL": "R$ {:,.2f}",
             "SALDO A PAGAR": "R$ {:,.2f}",
-            "ESTOQUE - EM MORA": "R$ {:,.2f}",
-            "ESTOQUE - VINCENDOS": "R$ {:,.2f}",
-            "RCL 2024": "R$ {:,.2f}",
-            "PARCELA ANUAL": "R$ {:,.2f}",
-            "APORTES": "R$ {:,.2f}",
-            "ESTORNO": "R$ {:,.2f}",
-            "DIVIDA EM MORA / RCL": "{:.2%}",
-            "APLICADO": "{:.2%}",
-            "QTD DE PRECATORIOS": "{:,.0f}"
-        }
-    ).hide(axis="index"), use_container_width=True)
-
-    # Botão para download
-    csv_data = filtered_df.to_csv(index=False)
-    st.download_button(
-        label="Download dos Dados Filtrados em CSV",
-        data=csv_data,
-        file_name='dados_filtrados.csv',
-        mime='text/csv',
-    )
+            "ESTOQUE - EM MORA": "R$ {:,.2f
