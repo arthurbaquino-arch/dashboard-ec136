@@ -10,35 +10,40 @@ BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Função para carregar a imagem e convertê-la para Base64
 def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode('utf-8')
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode('utf-8')
+    except FileNotFoundError:
+        st.error(f"Arquivo de imagem não encontrado: {bin_file}")
+        return None
 
 # Adicionar CSS para o fundo cinza claro e o brasão como plano de fundo
 def add_bg_from_local(image_file):
     bin_str = get_base64_of_bin_file(image_file)
-    page_bg_img = '''
-    <style>
-    .main {
-        background-color: #f0f2f6;
-        background-image: url("data:image/png;base64,%s");
-        background-repeat: no-repeat;
-        background-size: 200px;
-        background-position: left top;
-        background-attachment: fixed;
-    }
-    .st-emotion-cache-183q192 {
-        padding-top: 100px;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-    </style>
-    ''' % bin_str
-    st.markdown(page_bg_img, unsafe_allow_html=True)
+    if bin_str:
+        page_bg_img = '''
+        <style>
+        .main {
+            background-color: #f0f2f6;
+            background-image: url("data:image/png;base64,%s");
+            background-repeat: no-repeat;
+            background-size: 200px;
+            background-position: left top;
+            background-attachment: fixed;
+        }
+        .st-emotion-cache-183q192 {
+            padding-top: 100px;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        </style>
+        ''' % bin_str
+        st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # Configuração da página
 st.set_page_config(
@@ -60,7 +65,7 @@ st.markdown("---")
 # Botão para recarregar o cache
 if st.button('Recarregar Dados'):
     st.cache_data.clear()
-    st.experimental_rerun()
+    st.rerun()
 
 # Função para carregar os dados
 @st.cache_data
@@ -145,7 +150,7 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
     col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
     col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
     col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col4.metric("Saldo a Pagar", f"R$ {saldo_a_agar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
     st.markdown("---")
 
