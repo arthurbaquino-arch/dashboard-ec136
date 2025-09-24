@@ -38,10 +38,10 @@ def load_data():
         
         # Renomear colunas para facilitar o acesso
         df.columns = [
-            'ENTE', 'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-            'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR',
-            'SITUACAO_DIVIDA'
+            'ENTE', 'ESTOQUE - EM MORA', 'ESTOQUE - VINCENDOS', 'ENDIVIDAMENTO TOTAL', 
+            'QTD DE PRECATORIOS', 'RCL 2024', 'DIVIDA EM MORA / RCL', 
+            'APLICADO', 'PARCELA ANUAL', 'APORTES', 'ESTORNO', 'SALDO A PAGAR',
+            'SITUACAO DIVIDA'
         ]
 
         # Substituir valores '-' por NaN
@@ -49,9 +49,9 @@ def load_data():
 
         # Converter colunas numéricas
         numeric_cols = [
-            'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
-            'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
+            'ESTOQUE - EM MORA', 'ESTOQUE - VINCENDOS', 'ENDIVIDAMENTO TOTAL', 
+            'QTD DE PRECATORIOS', 'RCL 2024', 'DIVIDA EM MORA / RCL', 
+            'APLICADO', 'PARCELA ANUAL', 'APORTES', 'ESTORNO', 'SALDO A PAGAR'
         ]
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
@@ -88,10 +88,10 @@ if df is not None:
     col1, col2, col3, col4 = st.columns(4)
 
     # Métricas
-    total_divida = filtered_df['ENDIVIDAMENTO_TOTAL'].sum()
-    total_precatorios = filtered_df['QTD_DE_PRECATORIOS'].sum()
-    parcela_anual = filtered_df['PARCELA_ANUAL'].sum()
-    saldo_a_pagar = filtered_df['SALDO_A_PAGAR'].sum()
+    total_divida = filtered_df['ENDIVIDAMENTO TOTAL'].sum()
+    total_precatorios = filtered_df['QTD DE PRECATORIOS'].sum()
+    parcela_anual = filtered_df['PARCELA ANUAL'].sum()
+    saldo_a_pagar = filtered_df['SALDO A PAGAR'].sum()
 
     col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
     col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
@@ -103,8 +103,8 @@ if df is not None:
     # Gráfico de pizza de divisão da dívida
     st.header("Divisão da Dívida")
     divida_data = {
-        'Tipo': ['Estoque em Mora', 'Estoque Vincendos'],
-        'Valor': [filtered_df['ESTOQUE_EM_MORA'].sum(), filtered_df['ESTOQUE_VINCENDOS'].sum()]
+        'Tipo': ['Estoque - Em Mora', 'Estoque - Vincendos'],
+        'Valor': [filtered_df['ESTOQUE - EM MORA'].sum(), filtered_df['ESTOQUE - VINCENDOS'].sum()]
     }
     divida_df = pd.DataFrame(divida_data)
     
@@ -120,20 +120,22 @@ if df is not None:
     st.markdown("---")
     
     # Tabela de dados
-    st.header("Tabela de Dados Detalhada")
-    st.dataframe(filtered_df.style.format(
+    st.header("Dados Gerais")
+    st.dataframe(filtered_df.style.set_table_styles([
+        {'selector': 'th', 'props': [('font-weight', 'bold'), ('text-align', 'center')]}
+    ]).format(
         {
-            "ENDIVIDAMENTO_TOTAL": "R$ {:,.2f}",
-            "SALDO_A_PAGAR": "R$ {:,.2f}",
-            "ESTOQUE_EM_MORA": "R$ {:,.2f}",
-            "ESTOQUE_VINCENDOS": "R$ {:,.2f}",
-            "RCL_2024": "R$ {:,.2f}",
-            "PARCELA_ANUAL": "R$ {:,.2f}",
+            "ENDIVIDAMENTO TOTAL": "R$ {:,.2f}",
+            "SALDO A PAGAR": "R$ {:,.2f}",
+            "ESTOQUE - EM MORA": "R$ {:,.2f}",
+            "ESTOQUE - VINCENDOS": "R$ {:,.2f}",
+            "RCL 2024": "R$ {:,.2f}",
+            "PARCELA ANUAL": "R$ {:,.2f}",
             "APORTES": "R$ {:,.2f}",
             "ESTORNO": "R$ {:,.2f}",
-            "DIVIDA_EM_MORA_RCL": "{:.2%}",
+            "DIVIDA EM MORA / RCL": "{:.2%}",
             "APLICADO": "{:.2%}",
-            "QTD_DE_PRECATORIOS": "{:,.0f}"
+            "QTD DE PRECATORIOS": "{:,.0f}"
         }
     ).hide(axis="index"), use_container_width=True)
 
@@ -145,5 +147,3 @@ if df is not None:
         file_name='dados_filtrados.csv',
         mime='text/csv',
     )
-else:
-    st.info("Por favor, faça o upload da sua planilha para começar.")
