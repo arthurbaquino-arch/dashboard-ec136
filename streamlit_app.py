@@ -14,7 +14,6 @@ st.set_page_config(
 @st.cache_data
 def load_data(uploaded_file):
     try:
-        # Tenta ler com ';' primeiro, depois com ',' para CSV
         if uploaded_file.name.endswith('.csv'):
             try:
                 df = pd.read_csv(uploaded_file, decimal=',', sep=';')
@@ -22,36 +21,34 @@ def load_data(uploaded_file):
                 uploaded_file.seek(0)
                 df = pd.read_csv(uploaded_file, decimal=',')
         else:
-            # Para arquivos .xlsx
             df = pd.read_excel(uploaded_file)
-
+        
         # Encontrar a linha do cabeçalho
-        # Procura por uma linha que contenha a coluna "ENTE"
-        header_row = df[df.apply(lambda row: 'ENTE' in row.values, axis=1)].index
-
+        header_row = df[df.apply(lambda row: 'ENTE' in str(row), axis=1)].index
+        
         if not header_row.empty:
             header_index = header_row[0]
-            df = pd.read_excel(uploaded_file, skiprows=header_index + 1)
+            # Ler o arquivo novamente, com a linha de cabeçalho correta e ignorando a última linha de total
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file, skiprows=header_index, decimal=',', sep=';', skipfooter=1, engine='python')
+            else:
+                df = pd.read_excel(uploaded_file, skiprows=header_index, skipfooter=1)
 
-            # Definir o cabeçalho
-            new_header = df.iloc[0]
-            df = df[1:]
-            df.columns = new_header
+            # Remover a primeira coluna, que parece estar vazia no arquivo
+            df = df.iloc[:, 1:]
+            
+            # Identificar e remover colunas sem nome (geradas por erro de formatação)
+            unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
+            df = df.drop(columns=unnamed_cols, errors='ignore')
+
         else:
             st.error("Não foi possível encontrar o cabeçalho 'ENTE' na planilha.")
             st.stop()
 
-        # Remove a primeira coluna, que parece estar vazia no arquivo
-        df = df.iloc[:, 1:]
-
-        # Identificar e remover colunas sem nome (geradas por erro de formatação)
-        unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
-        df = df.drop(columns=unnamed_cols, errors='ignore')
-
         # Garantir que a quantidade de colunas está correta antes de renomear
         if df.shape[1] != 13:
             raise ValueError(f"O arquivo tem {df.shape[1]} colunas, mas o esperado é 13. Por favor, verifique a estrutura.")
-
+        
         # Renomear colunas para facilitar o acesso
         df.columns = [
             'ENTE', 'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
@@ -66,7 +63,7 @@ def load_data(uploaded_file):
         # Converter colunas numéricas
         numeric_cols = [
             'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
+            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_ORA_RCL', 
             'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
         ]
         for col in numeric_cols:
@@ -84,7 +81,7 @@ def load_data(uploaded_file):
 st.title('📊 Painel de Análise - EC 136/2025')
 st.markdown("""
 Este dashboard foi gerado automaticamente para visualizar e analisar os dados da planilha de situação dos entes devedores.
-Use os filtros na barra lateral para explorar os dados de forma interativa.
+Use o filtro na barra lateral para explorar os dados de forma interativa.
 """)
 
 # Upload de arquivo na barra lateral
@@ -94,32 +91,30 @@ uploaded_file = st.sidebar.file_uploader("Selecione o arquivo .csv ou .xlsx", ty
 if uploaded_file:
     df = load_data(uploaded_file)
     if df is not None:
-        # Filtros na barra lateral
+        # Filtros na barra lateral (apenas ENTE)
         st.sidebar.header("Passo 2: Filtros")
         ente_options = ['Todos'] + sorted(df['ENTE'].dropna().unique())
         selected_entes = st.sidebar.multiselect('Selecione o(s) Ente(s)', options=ente_options, default=ente_options[0])
-
-        situacao_options = ['Todas'] + sorted(df['SITUACAO_DIVIDA'].dropna().unique())
-        selected_situacao = st.sidebar.multiselect('Selecione a Situação', options=situacao_options, default=situacao_options[0])
 
         # Aplicar filtros
         filtered_df = df.copy()
         if 'Todos' not in selected_entes:
             filtered_df = filtered_df[filtered_df['ENTE'].isin(selected_entes)]
-        if 'Todas' not in selected_situacao:
-            filtered_df = filtered_df[filtered_df['SITUACAO_DIVIDA'].isin(selected_situacao)]
 
         # Colunas de métricas
-        col1, col2, col3 = st.columns(3)
+        st.header("Principais Indicadores")
+        col1, col2, col3, col4 = st.columns(4)
 
         # Métricas
         total_divida = filtered_df['ENDIVIDAMENTO_TOTAL'].sum()
-        saldo_a_pagar = filtered_df['SALDO_A_PAGAR'].sum()
         total_precatorios = filtered_df['QTD_DE_PRECATORIOS'].sum()
+        parcela_anual = filtered_df['PARCELA_ANUAL'].sum()
+        saldo_a_pagar = filtered_df['SALDO_A_PAGAR'].sum()
 
         col1.metric("Endividamento Total", f"R$ {total_divida:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-        col2.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-        col3.metric("Total de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
+        col2.metric("Qtd. de Precatórios", f"{total_precatorios:,.0f}".replace(",", "."))
+        col3.metric("Parcela Anual", f"R$ {parcela_anual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        col4.metric("Saldo a Pagar", f"R$ {saldo_a_pagar:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
         st.markdown("---")
 
@@ -134,7 +129,7 @@ if uploaded_file:
                 top_10,
                 x='ENDIVIDAMENTO_TOTAL',
                 y='ENTE',
-                title='Top 10 Envidamentos Totais',
+                title='Top 10 Endividamentos Totais',
                 orientation='h',
                 labels={'ENTE': 'Ente', 'ENDIVIDAMENTO_TOTAL': 'Endividamento Total'},
                 color_discrete_sequence=px.colors.qualitative.Pastel
@@ -153,7 +148,7 @@ if uploaded_file:
                 color_discrete_sequence=px.colors.qualitative.Vivid
             )
             st.plotly_chart(fig_pie, use_container_width=True)
-
+        
         st.markdown("---")
 
         # Tabela de dados
