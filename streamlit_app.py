@@ -5,7 +5,7 @@ import unicodedata
 import base64
 
 # Nome do arquivo de dados e da imagem no repositório
-DATA_FILE = "PAINEL EC 136-2025.xlsx"
+DATA_FILE = "PAINEL EC 136-2025.xlsx - PLANILHA PEC 136.csv"
 BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Função para carregar a imagem e convertê-la para Base64
@@ -71,16 +71,13 @@ if st.button('Recarregar Dados'):
 @st.cache_data
 def load_data():
     try:
-        # Carrega o arquivo XLSX conforme o nome e formato corretos
-        df = pd.read_excel(DATA_FILE, header=None)
+        # Lê o arquivo CSV, ignorando as linhas extras e usando o cabeçalho correto
+        df = pd.read_csv(DATA_FILE, sep=',', header=8)
             
-        # Pular as 9 primeiras linhas e a última, que é o total
-        df = df.iloc[9:-1].copy()
+        # Pular a primeira coluna
+        df = df.iloc[:, 1:].copy()
             
-        # Remove a primeira coluna, que parece estar vazia no arquivo
-        df = df.iloc[:, 1:]
-
-        # Identificar e remover colunas sem nome (geradas por erro de formatação)
+        # Remover colunas sem nome (geradas por erro de formatação)
         unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
         df = df.drop(columns=unnamed_cols, errors='ignore')
 
