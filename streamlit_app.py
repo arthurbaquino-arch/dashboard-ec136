@@ -17,30 +17,14 @@ def load_data(uploaded_file):
         # Tenta ler com ';' primeiro, depois com ',' para CSV
         if uploaded_file.name.endswith('.csv'):
             try:
-                df = pd.read_csv(uploaded_file, decimal=',', sep=';')
+                df = pd.read_csv(uploaded_file, skiprows=9, decimal=',', sep=';', skipfooter=1, engine='python')
             except Exception:
                 uploaded_file.seek(0)
-                df = pd.read_csv(uploaded_file, decimal=',')
+                df = pd.read_csv(uploaded_file, skiprows=9, decimal=',', skipfooter=1, engine='python')
         else:
-            # Para arquivos .xlsx
-            df = pd.read_excel(uploaded_file, header=None)
+            # Para arquivos .xlsx, pula as 9 primeiras linhas e a última
+            df = pd.read_excel(uploaded_file, skiprows=9, skipfooter=1, engine='python')
             
-        # Encontrar a linha do cabeçalho
-        # Procura por uma linha que contenha a coluna "ENTE"
-        header_row = df[df.apply(lambda row: 'ENTE' in str(row), axis=1)].index
-
-        if not header_row.empty:
-            header_index = header_row[0]
-            
-            # Define a linha encontrada como o cabeçalho e descarta as linhas acima
-            df.columns = df.iloc[header_index]
-            df = df.iloc[header_index + 1:].reset_index(drop=True)
-            
-            # Remove a última linha, que parece ser o total
-            df = df.iloc[:-1]
-        else:
-            raise ValueError("Não foi possível encontrar o cabeçalho 'ENTE' na planilha.")
-
         # Remove a primeira coluna, que parece estar vazia no arquivo
         df = df.iloc[:, 1:]
 
@@ -124,7 +108,7 @@ if uploaded_file:
 
         st.markdown("---")
 
-        # Novo gráfico de pizza de divisão da dívida
+        # Gráfico de pizza de divisão da dívida
         st.header("Divisão da Dívida")
         divida_data = {
             'Tipo': ['Estoque em Mora', 'Estoque Vincendos'],
