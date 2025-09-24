@@ -14,6 +14,7 @@ st.set_page_config(
 @st.cache_data
 def load_data(uploaded_file):
     try:
+        # Tenta ler com ';' primeiro, depois com ',' para CSV
         if uploaded_file.name.endswith('.csv'):
             try:
                 df = pd.read_csv(uploaded_file, decimal=',', sep=';')
@@ -21,29 +22,30 @@ def load_data(uploaded_file):
                 uploaded_file.seek(0)
                 df = pd.read_csv(uploaded_file, decimal=',')
         else:
-            df = pd.read_excel(uploaded_file)
-        
+            # Para arquivos .xlsx
+            df = pd.read_excel(uploaded_file, header=None)
+            
         # Encontrar a linha do cabeçalho
+        # Procura por uma linha que contenha a coluna "ENTE"
         header_row = df[df.apply(lambda row: 'ENTE' in str(row), axis=1)].index
-        
+
         if not header_row.empty:
             header_index = header_row[0]
-            # Ler o arquivo novamente, com a linha de cabeçalho correta e ignorando a última linha de total
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file, skiprows=header_index, decimal=',', sep=';', skipfooter=1, engine='python')
-            else:
-                df = pd.read_excel(uploaded_file, skiprows=header_index, skipfooter=1)
-
-            # Remover a primeira coluna, que parece estar vazia no arquivo
-            df = df.iloc[:, 1:]
+            # Usa a linha encontrada como cabeçalho
+            df.columns = df.iloc[header_index]
+            df = df.iloc[header_index + 1:].reset_index(drop=True)
             
-            # Identificar e remover colunas sem nome (geradas por erro de formatação)
-            unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
-            df = df.drop(columns=unnamed_cols, errors='ignore')
-
+            # Remove a última linha, que parece ser o total
+            df = df.iloc[:-1]
         else:
-            st.error("Não foi possível encontrar o cabeçalho 'ENTE' na planilha.")
-            st.stop()
+            raise ValueError("Não foi possível encontrar o cabeçalho 'ENTE' na planilha.")
+
+        # Remove a primeira coluna, que parece estar vazia no arquivo
+        df = df.iloc[:, 1:]
+
+        # Identificar e remover colunas sem nome (geradas por erro de formatação)
+        unnamed_cols = [col for col in df.columns if 'Unnamed' in str(col)]
+        df = df.drop(columns=unnamed_cols, errors='ignore')
 
         # Garantir que a quantidade de colunas está correta antes de renomear
         if df.shape[1] != 13:
@@ -63,7 +65,7 @@ def load_data(uploaded_file):
         # Converter colunas numéricas
         numeric_cols = [
             'ESTOQUE_EM_MORA', 'ESTOQUE_VINCENDOS', 'ENDIVIDAMENTO_TOTAL', 
-            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_ORA_RCL', 
+            'QTD_DE_PRECATORIOS', 'RCL_2024', 'DIVIDA_EM_MORA_RCL', 
             'APLICADO', 'PARCELA_ANUAL', 'APORTES', 'ESTORNO', 'SALDO_A_PAGAR'
         ]
         for col in numeric_cols:
@@ -162,19 +164,3 @@ if uploaded_file:
                 "RCL_2024": "R$ {:,.2f}",
                 "PARCELA_ANUAL": "R$ {:,.2f}",
                 "APORTES": "R$ {:,.2f}",
-                "ESTORNO": "R$ {:,.2f}",
-                "DIVIDA_EM_MORA_RCL": "{:,.5f}",
-                "APLICADO": "{:,.2f}"
-            }
-        ).hide(axis="index"), use_container_width=True)
-
-        # Botão para download
-        csv_data = filtered_df.to_csv(index=False)
-        st.download_button(
-            label="Download dos Dados Filtrados em CSV",
-            data=csv_data,
-            file_name='dados_filtrados.csv',
-            mime='text/csv',
-        )
-else:
-    st.info("Por favor, faça o upload da sua planilha para começar.")
