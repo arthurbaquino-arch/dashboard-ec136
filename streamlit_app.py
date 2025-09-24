@@ -184,4 +184,23 @@ Este dashboard foi gerado automaticamente para visualizar e analisar os dados da
         {
             "ENDIVIDAMENTO TOTAL": "R$ {:,.2f}",
             "SALDO A PAGAR": "R$ {:,.2f}",
-            "ESTOQUE - EM MORA": "R$ {:,.2f
+            "ESTOQUE - EM MORA": "R$ {:,.2f}",
+            "ESTOQUE - VINCENDOS": "R$ {:,.2f}",
+            "RCL 2024": "R$ {:,.2f}",
+            "PARCELA ANUAL": "R$ {:,.2f}",
+            "APORTES": "R$ {:,.2f}",
+            "ESTORNO": "R$ {:,.2f}",
+            "DIVIDA EM MORA / RCL": "{:.2%}",
+            "APLICADO": "{:.2%}",
+            "QTD DE PRECATORIOS": "{:,.0f}"
+        }
+    ).hide(axis="index"), use_container_width=True)
+
+    # Botão para download
+    csv_data = filtered_df.to_csv(index=False)
+    st.download_button(
+        label="Download dos Dados Filtrados em CSV",
+        data=csv_data,
+        file_name='dados_filtrados.csv',
+        mime='text/csv',
+    )
