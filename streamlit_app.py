@@ -31,7 +31,8 @@ def load_data(uploaded_file):
 
         if not header_row.empty:
             header_index = header_row[0]
-            # Usa a linha encontrada como cabeçalho
+            
+            # Define a linha encontrada como o cabeçalho e descarta as linhas acima
             df.columns = df.iloc[header_index]
             df = df.iloc[header_index + 1:].reset_index(drop=True)
             
@@ -123,8 +124,27 @@ if uploaded_file:
 
         st.markdown("---")
 
+        # Novo gráfico de pizza de divisão da dívida
+        st.header("Divisão da Dívida")
+        divida_data = {
+            'Tipo': ['Estoque em Mora', 'Estoque Vincendos'],
+            'Valor': [filtered_df['ESTOQUE_EM_MORA'].sum(), filtered_df['ESTOQUE_VINCENDOS'].sum()]
+        }
+        divida_df = pd.DataFrame(divida_data)
+        
+        fig_divida_pie = px.pie(
+            divida_df,
+            values='Valor',
+            names='Tipo',
+            title='Divisão da Dívida entre Estoque em Mora e Vincendos',
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        st.plotly_chart(fig_divida_pie, use_container_width=True)
+
+        st.markdown("---")
+        
         # Tabela de dados
-        st.subheader("Tabela de Dados Detalhada")
+        st.header("Tabela de Dados Detalhada")
         st.dataframe(filtered_df.style.format(
             {
                 "ENDIVIDAMENTO_TOTAL": "R$ {:,.2f}",
@@ -135,8 +155,9 @@ if uploaded_file:
                 "PARCELA_ANUAL": "R$ {:,.2f}",
                 "APORTES": "R$ {:,.2f}",
                 "ESTORNO": "R$ {:,.2f}",
-                "DIVIDA_EM_MORA_RCL": "{:,.5f}",
-                "APLICADO": "{:,.2f}"
+                "DIVIDA_EM_MORA_RCL": "{:.2%}",
+                "APLICADO": "{:.2%}",
+                "QTD_DE_PRECATORIOS": "{:,.0f}"
             }
         ).hide(axis="index"), use_container_width=True)
 
