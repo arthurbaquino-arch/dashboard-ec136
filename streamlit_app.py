@@ -3,8 +3,9 @@ import pandas as pd
 import plotly.express as px
 import unicodedata
 
-# Nome do arquivo de dados no repositório
+# Nome do arquivo de dados e da imagem no repositório
 DATA_FILE = "PAINEL EC 136-2025.xlsx"
+BRASAO_IMAGE = "BRASAO TJPE COLORIDO VERTICAL 1080X1080.png"
 
 # Configuração da página
 st.set_page_config(
@@ -13,6 +14,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Adicionar o brasão, título e subtítulo
+col_img, col_title = st.columns([1, 4])
+with col_img:
+    st.image(BRASAO_IMAGE, width=150)
+with col_title:
+    st.title("TRIBUNAL DE JUSTIÇA DE PERNAMBUCO")
+    st.subheader("COORDENADORIA GERAL DE PRECATÓRIOS")
+
+st.markdown("---")
 
 # Função para carregar os dados
 @st.cache_data
@@ -65,15 +76,13 @@ def load_data():
         st.stop()
         return None
 
-# Layout da aplicação
-st.title('📊 Painel de Análise - EC 136/2025')
-st.markdown("""
-Este dashboard foi gerado automaticamente para visualizar e analisar os dados da planilha de situação dos entes devedores.
-""")
-
 # Carrega os dados diretamente do repositório
 df = load_data()
 if df is not None:
+    st.markdown("""
+Este dashboard foi gerado automaticamente para visualizar e analisar os dados da planilha de situação dos entes devedores.
+""")
+
     # Filtro no painel principal
     st.header("Filtros")
     
