@@ -164,3 +164,19 @@ if uploaded_file:
                 "RCL_2024": "R$ {:,.2f}",
                 "PARCELA_ANUAL": "R$ {:,.2f}",
                 "APORTES": "R$ {:,.2f}",
+                "ESTORNO": "R$ {:,.2f}",
+                "DIVIDA_EM_MORA_RCL": "{:,.5f}",
+                "APLICADO": "{:,.2f}"
+            }
+        ).hide(axis="index"), use_container_width=True)
+
+        # Botão para download
+        csv_data = filtered_df.to_csv(index=False)
+        st.download_button(
+            label="Download dos Dados Filtrados em CSV",
+            data=csv_data,
+            file_name='dados_filtrados.csv',
+            mime='text/csv',
+        )
+else:
+    st.info("Por favor, faça o upload da sua planilha para começar.")
